@@ -11,8 +11,8 @@ class Config:
     CLIENT_ORIGINS = os.getenv("CLIENT_ORIGINS") or os.environ.get("CLIENT_ORIGINS") or "http://localhost:3000,http://localhost:5173"
     CLIENT_ORIGINS = [origin.strip() for origin in CLIENT_ORIGINS.split(",")]
     
-    DEFAULT_SUPER_ADMIN_USERNAME = os.getenv("DEFAULT_SUPER_ADMIN_USERNAME")
-    DEFAULT_SUPER_ADMIN_PASSWORD = os.getenv("DEFAULT_SUPER_ADMIN_PASSWORD")
+    DEFAULT_ADMIN_USERNAME = os.getenv("DEFAULT_ADMIN_USERNAME")
+    DEFAULT_ADMIN_PASSWORD = os.getenv("DEFAULT_ADMIN_PASSWORD")
     
     # JWT configurations
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY") or os.environ.get('JWT_SECRET_KEY')

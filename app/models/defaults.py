@@ -11,10 +11,10 @@ from ..utils.helpers.loggers import console_log
 from ..enums.auth import RoleNames
 
 
-def create_default_super_admin(clear: bool = False) -> None:
+def create_default_admin(clear: bool = False) -> None:
     if inspect(db.engine).has_table("role"):
         admin_role = Role.query.filter_by(name=RoleNames.ADMIN).first()
-        super_admin_role = Role.query.filter_by(name=RoleNames.SUPER_ADMIN).first()
+        admin_role = Role.query.filter_by(name=RoleNames.ADMIN).first()
         
         if not admin_role:
             admin_role = Role(
@@ -24,12 +24,12 @@ def create_default_super_admin(clear: bool = False) -> None:
             db.session.add(admin_role)
             db.session.commit()
         
-        if not super_admin_role:
-            super_admin_role = Role(
-                name=RoleNames.SUPER_ADMIN,
-                slug=slugify(RoleNames.SUPER_ADMIN.value)
+        if not admin_role:
+            admin_role = Role(
+                name=RoleNames.ADMIN,
+                slug=slugify(RoleNames.ADMIN.value)
             )
-            db.session.add(super_admin_role)
+            db.session.add(admin_role)
             db.session.commit()
     
     if inspect(db.engine).has_table("app_user"):
@@ -49,10 +49,10 @@ def create_default_super_admin(clear: bool = False) -> None:
         
         if not admin:
             admin_user = AppUser(
-                username=current_app.config["DEFAULT_SUPER_ADMIN_USERNAME"],
+                username=current_app.config["DEFAULT_ADMIN_USERNAME"],
                 email="admin@admin.com"
             )
-            admin_user.password=current_app.config["DEFAULT_SUPER_ADMIN_PASSWORD"]
+            admin_user.password=current_app.config["DEFAULT_ADMIN_PASSWORD"]
             
             admin_user_profile = Profile(firstname="admin", app_user=admin_user)
             admin_user_address = Address(app_user=admin_user)
@@ -63,7 +63,7 @@ def create_default_super_admin(clear: bool = False) -> None:
             db.session.commit()
             
             admin_user_role = UserRole.assign_role(admin_user, admin_role)
-            super_admin_user_role = UserRole.assign_role(admin_user, super_admin_role)
+            admin_user_role = UserRole.assign_role(admin_user, admin_role)
             console_log(data="Admin user created with default credentials")
         else:
             console_log(data="Admin user already exists")
