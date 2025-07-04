@@ -12,6 +12,7 @@ as well as methods for password hashing and verification.
 from flask import current_app
 from slugify import slugify
 from sqlalchemy import inspect, or_
+from sqlalchemy.orm import Query, backref
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 
@@ -21,6 +22,21 @@ from ..utils.helpers.loggers import console_log
 from .media import Media
 from config import Config
 
+
+class TempUser(db.Model):
+    id = db.Column(db.Integer(), primary_key=True)
+    email = db.Column(db.String(255), nullable=False, unique=True)
+    date_joined = db.Column(db.DateTime(timezone=True), default=DateTimeUtils.aware_utcnow)
+    
+    def __repr__(self):
+        return f'<ID: {self.id}, email: {self.email}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'email': self.email,
+            'date_joined': self.date_joined,
+        }
 
 
 class AppUser(db.Model, UserMixin):
@@ -64,6 +80,14 @@ class AppUser(db.Model, UserMixin):
         return check_password_hash(self.password_hash, password)
     
     @property
+    def full_name(self):
+        return f"{self.profile.firstname} {self.profile.lastname}"
+    
+    @property
+    def wallet_balance(self):
+        return self.wallet.balance
+    
+    @property
     def role_names(self) -> list[str]:
         """Returns a list of role names for the user."""
         if not db.inspect(self).persistent:
@@ -73,15 +97,22 @@ class AppUser(db.Model, UserMixin):
     
     
     @staticmethod
-    def add_search_filters(query, search_term):
+    def add_search_filters(query: Query, search_term: str) -> Query:
         """
         Adds search filters to a SQLAlchemy query.
         """
         if search_term:
             search_term = f"%{search_term}%"
+            
+            # Join the Profile table using outerjoin to include users without a profile
+            query = query.outerjoin(AppUser.profile)
+            
             query = query.filter(
                     or_(
-                        AppUser.email.ilike(search_term)
+                        AppUser.username.ilike(search_term),
+                        AppUser.email.ilike(search_term),
+                        Profile.firstname.ilike(search_term),
+                        Profile.lastname.ilike(search_term)
                     )
                 )
         return query
@@ -105,12 +136,41 @@ class AppUser(db.Model, UserMixin):
         db.session.commit()
     
     def to_dict(self) -> dict:
+        address_info = {}
+        if self.address:
+            address_info.update({
+                'country': self.address.country,
+                'state': self.address.state
+            })
+        
+        profile_data = {}
+        if self.profile:
+            profile_data.update({
+                'firstname': self.profile.firstname,
+                'lastname': self.profile.lastname,
+                'gender': self.profile.gender,
+                'phone': self.profile.phone,
+                'profile_picture': self.profile.profile_pic,
+                'referral_link': self.profile.referral_link,
+            })
+        
+        user_wallet = self.wallet
+        wallet_info = {
+            'balance': user_wallet.balance if user_wallet else None,
+            'currency_name': user_wallet.currency_name if user_wallet else None,
+            'currency_code': user_wallet.currency_code if user_wallet else None,
+            'currency_symbol': user_wallet.currency_symbol if user_wallet else None,
+        }
         
         return {
             "id": self.id,
+            'username': self.username,
             "email": self.email,
             "date_joined": to_gmt1_or_none(self.date_joined),
+            'wallet': wallet_info,
             "roles": self.role_names,
+            **address_info,  # Merge address information
+            **profile_data # Merge profile information
         }
     
 
@@ -125,7 +185,7 @@ class Profile(db.Model):
     profile_picture_id = db.Column(db.Integer(), db.ForeignKey('media.id'), nullable=True)
     
     user_id = db.Column(db.Integer, db.ForeignKey('app_user.id', ondelete='CASCADE'), nullable=False,)
-    app_user: AppUser = db.relationship('AppUser', back_populates="profile")
+    app_user = db.relationship('AppUser', back_populates="profile")
     
     def __repr__(self):
         return f'<profile ID: {self.id}, name: {self.firstname}>'

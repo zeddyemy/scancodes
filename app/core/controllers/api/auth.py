@@ -17,7 +17,8 @@ from jwt import ExpiredSignatureError, DecodeError
 from email_validator import validate_email, EmailNotValidError, ValidatedEmail
 
 from ....extensions import db
-from ....models import Role, RoleNames, AppUser
+from ....models import Role, AppUser
+from ....enums.auth import RoleNames
 from ....utils.helpers.loggers import console_log, log_exception
 from ....utils.helpers.http_response import error_response, success_response
 from ....utils.helpers.user import get_app_user

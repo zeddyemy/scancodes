@@ -34,8 +34,8 @@ class Payment(db.Model):
     # making a customer order have many payments. to address concerns like:
     # - Payment history. 
     # - Split payments.
-    order_id = db.Column(db.Integer(), db.ForeignKey('customer_order.id'), nullable=True)
-    customer_order = db.relationship('CustomerOrder', back_populates='payment')
+    # order_id = db.Column(db.Integer(), db.ForeignKey('customer_order.id'), nullable=True)
+    # customer_order = db.relationship('CustomerOrder', back_populates='payment')
     
     subscription_id = db.Column(db.Integer(), db.ForeignKey('subscription.id'), nullable=True)
     subscription = db.relationship('Subscription', back_populates='payment')
