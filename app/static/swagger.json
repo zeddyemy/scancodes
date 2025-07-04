@@ -150,8 +150,8 @@
 
 		"/api/auth/login": {
 			"post": {
-				"tags": ["Manager"],
-				"summary": "Endpoint for Manager to Login to App",
+				"tags": ["Base"],
+				"summary": "Endpoint for Customers to Login to App",
 				"parameters": [
 					{
 						"name": "body",
@@ -203,7 +203,7 @@
 														"Junior Admin",
 														"Customer"
 													],
-													"example": ["Manager"]
+													"example": ["Customer"]
 												}
 											}
 										}
@@ -219,10 +219,10 @@
 			"post": {
 				"security": [
 					{
-						"ManagerBearerAuth": []
+						"BaseBearerAuth": []
 					}
 				],
-				"tags": ["Manager"],
+				"tags": ["Base"],
 				"summary": "Endpoint for manager to Update their Password",
 				"parameters": [
 					{

@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
 from config import Config, config_by_name, configure_logging
+from .context_processors import app_context_Processor
 from .extensions import initialize_extensions, login_manager
 from .models import AppUser, UserRole, create_db_defaults
 from .utils.date_time import timezone
@@ -27,6 +28,7 @@ def create_app(config_name=Config.ENV, create_defaults=True):
     console_log("config_name", config_name)
     
     app.config.from_object(config_by_name[config_name])
+    app.context_processor(app_context_Processor)
     
     # Initialize Flask extensions
     initialize_extensions(app=app)
