@@ -1,0 +1,27 @@
+**/__pycache__/
+.pytest_cache/
+.venv/
+tests/
+env/
+wsl_env/
+migrations/
+migrations_/
+migrations__/
+migrations-staging/
+migrations_local/
+migrations_live/
+**/dummy/
+.env
+backup_file.backup
+
+# Editor directories and files
+.vscode/
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
