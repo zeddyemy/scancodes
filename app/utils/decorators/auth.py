@@ -26,102 +26,39 @@ from ..helpers.roles import normalize_role
 # Define type variables for better type hinting
 F = TypeVar('F', bound=Callable[..., Any])
 
-
 def roles_required(*required_roles: str) -> Callable[[F], F]:
     """
-    Smart decorator that handles both JWT and session-based authentication with role verification.
-    
-    It ensures that the current user has one of the specified roles.
-    
-    This decorator provides a unified authentication and authorization mechanism that works for:
-    1. API requests with JWT authentication
-    2. AJAX requests from web interface
-    3. Regular web requests with session-based authentication
+    Decorator to ensure that the current user has all of the specified roles.
 
-    Authentication Flow:
-    - For API/AJAX requests:
-        1. Attempts JWT authentication first
-        2. Falls back to session authentication if JWT fails/not present
-        3. Returns JSON responses for success/failure
-    
-    - For web requests:
-        1. Uses Flask-Login session authentication
-        2. Handles redirects to appropriate login pages
-        3. Renders error templates for permission issues
+    This decorator will return a 403 error if the current user does not have
+    all of the roles specified in `required_roles`.
 
     Args:
-        *required_roles (str): Variable length argument of role names that are required to access the decorated route.
-    
-    Returns:
-        Callable: Decorated function that enforces authentication and role checks
-    
-    Response Types:
-        - API/AJAX requests:
-            - 401 Unauthorized: When authentication fails
-            - 403 Forbidden: When role check fails
-            - JSON responses with appropriate messages
-        
-        - Web requests:
-            - Redirect to login page: When not authenticated
-            - Error template: When role check fails
-            - Original response: When all checks pass
+        *required_roles (str): The required roles to access the route.
 
+    Returns:
+        function: The decorated function.
+
+    Raises:
+        HTTPException: A 403 error if the current user does not have the required roles.
     """
     
-    # Normalize required roles once at decoration time
     normalized_required_roles = {normalize_role(role) for role in required_roles}
     
-    def decorator(fn: F) -> F:
+    def decorator(fn):
         @wraps(fn)
-        def wrapper(*args: Any, **kwargs: Any) -> Union[ResponseReturnValue, Response]:
-            is_api_request: bool = (
-                request.path.startswith('/api') or 
-                request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-            )
-
-            # Handle API/AJAX requests
-            if is_api_request:
-                # API/AJAX request - use JWT if token present, fallback to session
-                try:
-                    jwt_required()(lambda: None)()  # Verify JWT if present
-                    current_user: AppUser = get_current_user()  # Will use JWT identity
-                except:
-                    # Fallback to session user if JWT fails/not present
-                    current_user = session_user
-                
-                if not current_user or not current_user.is_authenticated:
-                    return error_response("Unauthorized", 401)
-                
-                # Check roles for API requests
-                if not any(normalize_role(user_role.role.name.value) in normalized_required_roles 
-                        for user_role in current_user.roles):
-                    return error_response(
-                        "Access denied: Insufficient permissions", 
-                        403
-                    )
+        @jwt_required()
+        def wrapper(*args, **kwargs):
+            current_user_id = get_jwt_identity()
+            current_user = get_current_user()
             
-            # Handle web requests - use session authentication
-            else:
-                if not session_user.is_authenticated:
-                    next_url: str = request.path
-                    flash("You need to login first", 'error')
-                    if request.blueprint == 'web_admin':
-                        return redirect(url_for('web_admin.login', next=next_url))
-                    return redirect(url_for('web_front.login', next=next_url))
-                
-                # Check roles for web requests
-                if not any(normalize_role(user_role.role.name.value) in normalized_required_roles 
-                        for user_role in session_user.roles):
-                    template: str = (
-                        'web_admin/errors/misc/permission.html' 
-                        if request.blueprint == 'web_admin'
-                        else 'web_front/errors/permission.html'
-                    )
-                    return render_template(
-                        template,
-                        msg="Access denied: You do not have the required roles to access this resource"
-                    )
+            if not current_user:
+                return error_response("Unauthorized", 401)
+            
+            if not any(normalize_role(user_role.role.name.value) in normalized_required_roles 
+                        for user_role in current_user.roles):
+                return error_response("Access denied: Insufficient permissions", 403)
             
             return fn(*args, **kwargs)
-        return wrapper  # type: ignore
+        return wrapper
     return decorator

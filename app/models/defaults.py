@@ -6,10 +6,11 @@ from ..extensions import db
 from .user import AppUser, Profile, Address
 from .wallet import Wallet
 from .role import Role, UserRole
+from .template import Template
 from ..utils.helpers.loggers import console_log
 
 from ..enums.auth import RoleNames
-
+from ..enums.qrcode import QRCodeType
 
 def create_default_admin(clear: bool = False) -> None:
     if inspect(db.engine).has_table("role"):
@@ -30,6 +31,22 @@ def create_default_admin(clear: bool = False) -> None:
                 slug=slugify(RoleNames.ADMIN.value)
             )
             db.session.add(admin_role)
+            db.session.commit()
+    
+    if inspect(db.engine).has_table("template"):
+        if Template.query.count() == 0:
+            templates = [
+                Template(name="Restaurant Menu",
+                        type=str(QRCodeType.MENU),
+                        payload_schema={"fields": ["url", "restaurant_name", "table_number"]},
+                        preview_url="https://…/menu_thumb.png"),
+                Template(name="Business Card",
+                        type=str(QRCodeType.CARD),
+                        payload_schema={"fields": ["name", "title", "company", "phone", "email"]},
+                        preview_url="https://…/card_thumb.png"),
+                # …more
+            ]
+            db.session.add_all(templates)
             db.session.commit()
     
     if inspect(db.engine).has_table("app_user"):

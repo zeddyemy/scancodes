@@ -1,9 +1,14 @@
-from .. import api_bp
-from ....controllers.api import BaseController
+from flask import Blueprint, request
 
-@api_bp.route("/templates", methods=["GET", "POST", "PUT", "DELETE"])
+from ....controllers.api.template import TemplateController
+from .. import api_bp
+
+template_bp = Blueprint('template', __name__, url_prefix='/templates')
+api_bp.register_blueprint(template_bp)
+
+@template_bp.route("/", methods=["GET", "POST"])
 def manage_templates():
-    """
-    Returns basic site information from settings.
-    """
-    return BaseController.site_info()
+    if request.method == "GET":
+        return TemplateController.get_templates()
+    elif request.method == "POST":
+        return TemplateController.create()

@@ -5,8 +5,6 @@ from .....utils.decorators.auth import roles_required
 
 qrcode_bp = Blueprint('qrcode', __name__, url_prefix='/qrcodes')
 
-qrcode_bp.add_url_rule("", "create", QrCodeController.create, methods=["POST"])
-
 @qrcode_bp.route("/", methods=["GET", "PUT", "DELETE"])
 @roles_required("Admin, Customer")
 def qrcode():

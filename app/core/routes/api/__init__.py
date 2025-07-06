@@ -7,4 +7,4 @@ from flask import Blueprint
 
 api_bp: Blueprint = Blueprint('api', __name__, url_prefix='/api')
 
-from .base import auth, index
+from .base import index, auth, qrcode, template, payment
