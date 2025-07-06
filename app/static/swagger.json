@@ -329,23 +329,16 @@
 				"summary": "Endpoint Delete Specific QR codes",
 				"parameters": [
 					{
-						"name": "body",
-						"in": "body",
-						"schema": {
-							"type": "object",
-							"properties": {
-								"email": { "type": "string" },
-								"username": { "type": "string" },
-								"password": { "type": "string" },
-								"firstname": { "type": "string" },
-								"lastname": { "type": "string" }
-							}
-						}
+						"name": "qrcode_id",
+						"in": "path",
+						"description": "unique ID of a qrcode",
+						"required": true,
+						"type": "string"
 					}
 				],
 				"responses": {
 					"200": {
-						"description": "Status of the update",
+						"description": "Status of the delete operation",
 						"schema": {
 							"type": "object",
 							"properties": {
