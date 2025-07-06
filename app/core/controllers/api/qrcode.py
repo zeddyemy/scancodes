@@ -26,7 +26,7 @@ class QrCodeController:
         url = store_qr(buf)
 
         user_id = get_jwt_identity()
-        qr      = QRCode(user_id=user_id, type=typ_enum, payload=payload, image_url=url)
+        qr      = QRCode(user_id=user_id, type=str(typ_enum), payload=payload, image_url=url)
         db.session.add(qr)
         db.session.commit()
 
