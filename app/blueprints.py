@@ -6,7 +6,7 @@ Copyright: © 2024 Emmanuel Olowu <zeddyemy@gmail.com>
 
 from flask import Flask, Blueprint
 
-def register_all_blueprints(app: Flask) -> None:
+def register_blueprints(app: Flask) -> None:
     
     from .core.routes.api import api_bp
     from .core.routes.api.admin import admin_api_bp

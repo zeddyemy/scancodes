@@ -1,13 +1,8 @@
 from .. import api_bp
 from ....controllers.api import BaseController
 
-
-@api_bp.route("/", methods=["GET"])
-def index():
-    return BaseController.index()
-
-@api_bp.route("/info")
-def site_info():
+@api_bp.route("/templates", methods=["GET", "POST", "PUT", "DELETE"])
+def manage_templates():
     """
     Returns basic site information from settings.
     """

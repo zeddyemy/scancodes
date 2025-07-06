@@ -20,7 +20,7 @@
 			"type": "apiKey",
 			"in": "header",
 			"name": "Authorization",
-			"description": "Login as a base user to use API Endpoints"
+			"description": "Login as a customer to use API Endpoints"
 		}
 	},
 	"tags": [
@@ -102,15 +102,11 @@
 				}
 			}
 		},
-		"/api/admin/update_password": {
+
+		"/api/auth/signup": {
 			"post": {
-				"security": [
-					{
-						"AdminBearerAuth": []
-					}
-				],
-				"tags": ["Admin"],
-				"summary": "Endpoint for Admin to Update their Password",
+				"tags": ["Base"],
+				"summary": "Endpoint for Customers to Signup",
 				"parameters": [
 					{
 						"name": "body",
@@ -118,8 +114,11 @@
 						"schema": {
 							"type": "object",
 							"properties": {
+								"email": { "type": "string" },
+								"username": { "type": "string" },
 								"password": { "type": "string" },
-								"new_password": { "type": "string" }
+								"firstname": { "type": "string" },
+								"lastname": { "type": "string" }
 							}
 						}
 					}
@@ -147,7 +146,6 @@
 				}
 			}
 		},
-
 		"/api/auth/login": {
 			"post": {
 				"tags": ["Base"],
@@ -159,7 +157,7 @@
 						"schema": {
 							"type": "object",
 							"properties": {
-								"email_phone": { "type": "string" },
+								"email_username": { "type": "string" },
 								"password": { "type": "string" }
 							}
 						}
@@ -215,15 +213,11 @@
 				}
 			}
 		},
-		"/api/auth/signup": {
+
+		"/api/qr/generate": {
 			"post": {
-				"security": [
-					{
-						"BaseBearerAuth": []
-					}
-				],
 				"tags": ["Base"],
-				"summary": "Endpoint for manager to Update their Password",
+				"summary": "Endpoint Generate QR codes",
 				"parameters": [
 					{
 						"name": "body",
@@ -231,8 +225,54 @@
 						"schema": {
 							"type": "object",
 							"properties": {
+								"email": { "type": "string" },
+								"username": { "type": "string" },
 								"password": { "type": "string" },
-								"new_password": { "type": "string" }
+								"firstname": { "type": "string" },
+								"lastname": { "type": "string" }
+							}
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Status of the update",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"message": { "type": "string" },
+								"status": {
+									"type": "string",
+									"enum": ["success", "failed"],
+									"example": "success"
+								},
+								"status_code": {
+									"type": "integer",
+									"enum": [200, 400, 409],
+									"example": 200
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/qr/host": {
+			"post": {
+				"tags": ["Base"],
+				"summary": "Endpoint Host QR codes",
+				"parameters": [
+					{
+						"name": "body",
+						"in": "body",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"email": { "type": "string" },
+								"username": { "type": "string" },
+								"password": { "type": "string" },
+								"firstname": { "type": "string" },
+								"lastname": { "type": "string" }
 							}
 						}
 					}

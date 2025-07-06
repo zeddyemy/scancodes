@@ -22,6 +22,7 @@ class Wallet(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('app_user.id', ondelete='CASCADE'), nullable=False,)
     
     app_user = db.relationship('AppUser', back_populates="wallet")
+    qrcodes = db.relationship('QRCode', back_populates='wallet', lazy='dynamic')
     
     @property
     def balance(self):

@@ -17,7 +17,7 @@ from jwt import ExpiredSignatureError, DecodeError
 from email_validator import validate_email, EmailNotValidError, ValidatedEmail
 
 from ....extensions import db
-from ....models import Role, AppUser
+from ....models import Role, AppUser, Profile, Address, Wallet
 from ....enums.auth import RoleNames
 from ....utils.helpers.loggers import console_log, log_exception
 from ....utils.helpers.http_response import error_response, success_response
@@ -53,7 +53,7 @@ class AuthController:
             if AppUser.query.filter_by(username=username).first():
                 return error_response('Username already taken', 409)
 
-            
+            # TODO: Email verification
             # Generate a random six-digit number
             # verification_code = generate_random_number()
             
@@ -69,7 +69,10 @@ class AuthController:
             if not all([firstname, lastname, username, password]):
                 return {"error": "A required field is not provided."}, 400
             
-            new_user = AppUser(name=firstname, email=email, username=username, password=password)
+            new_user = AppUser(email=email, username=username, password=password)
+            new_user_profile = Profile(app_user=new_user, firstname=firstname, lastname=lastname)
+            new_user_address = Address(app_user=new_user)
+            new_user_wallet = Wallet(app_user=new_user)
             
             role = Role.query.filter_by(name=RoleNames.CUSTOMER).first()
             
@@ -77,7 +80,10 @@ class AuthController:
                 new_user.roles.append(role)
             
             db.session.add_all([
-                new_user
+                new_user,
+                new_user_profile,
+                new_user_address,
+                new_user_wallet
             ])
             
             db.session.commit()
@@ -120,26 +126,26 @@ class AuthController:
         
         try:
             data = request.get_json()
-            email_phone = data.get('email_phone')
+            email_username = data.get('email_username')
             pwd = data.get('password')
             
-            if not email_phone:
-                return error_response("email_phone is empty", 400)
+            if not email_username:
+                return error_response("email_username is empty", 400)
             
             if not pwd or pwd is None:
                 return error_response("password not provided", 400)
             
-            # check if email_phone is an email. And convert to lowercase if it's an email
+            # check if email_username is an email. And convert to lowercase if it's an email
             try:
-                email_info = validate_email(email_phone, check_deliverability=False)
-                email_phone = email_info.normalized
-                console_log("email_phone", email_phone)
+                email_info = validate_email(email_username, check_deliverability=False)
+                email_username = email_info.normalized
+                console_log("email_username", email_username)
             except EmailNotValidError as e:
-                email_phone = email_phone
+                email_username = email_username
             
             
             # get user from db with the email/username.
-            user = get_app_user(email_phone)
+            user = get_app_user(email_username)
             
             if not user:
                 return error_response('Email/username is incorrect or doesn\'t exist', 401)
@@ -147,11 +153,8 @@ class AuthController:
             if not user.password_hash:
                 return error_response("This user doesn't have a password yet", 400)
             
-            if not user.verify_password(pwd):
+            if not user.check_password(pwd):
                 return error_response('Password is incorrect', 401)
-            
-            if not user.signed_in:
-                user.update(signed_in=True)
             
             access_token = create_access_token(identity={"user_id": user.id}, expires_delta=timedelta(minutes=2880), additional_claims={'type': 'access'})
             user_data = user.to_dict()

@@ -1,5 +1,4 @@
 from flask import Flask
-from werkzeug.middleware.proxy_fix import ProxyFix
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
@@ -25,8 +24,6 @@ def create_app(config_name=Config.ENV, create_defaults=True):
     '''
     app = Flask(__name__)
     
-    console_log("config_name", config_name)
-    
     app.config.from_object(config_by_name[config_name])
     app.context_processor(app_context_Processor)
     
@@ -51,8 +48,8 @@ def create_app(config_name=Config.ENV, create_defaults=True):
     configure_logging(app)
     
     # Register blueprints
-    from .blueprints import register_all_blueprints
-    register_all_blueprints(app)
+    from .blueprints import register_blueprints
+    register_blueprints(app)
     
     # initialize database defaults values
     if create_defaults:

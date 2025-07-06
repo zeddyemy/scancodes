@@ -13,4 +13,4 @@ class BaseController:
     
     @staticmethod
     def site_info():
-        pass
+        return success_response("Successful Response", 200)

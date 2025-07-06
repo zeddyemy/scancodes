@@ -20,6 +20,7 @@ from .wallet import Wallet
 from .payment import Payment, Transaction
 from .subscription import Subscription, SubscriptionPlan
 from .defaults import create_default_admin, create_roles
+from .qrcode import QRCode
 
 
 def create_db_defaults(app: Flask) -> None:
