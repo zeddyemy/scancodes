@@ -7,8 +7,8 @@ from .....utils.decorators.auth import roles_required
 @scan_bp.route("/<string:short_code>/<string:template_type>/<uuid:uuid>", methods=["GET", "POST"])
 def scan(short_code, template_type, uuid):
     """Scan endpoint: fetch QR code by uuid, validate short_code and template_type, and return data."""
-    from ....models.qrcode import QRCode, Template
-    from ....models.user import AppUser
+    from .....models.qrcode import QRCode, Template
+    from .....models.user import AppUser
     qr = QRCode.query.filter_by(id=str(uuid)).first()
     if not qr:
         return {"message": "QR code not found"}, 404
