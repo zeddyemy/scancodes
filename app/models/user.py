@@ -17,6 +17,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 
 from ..extensions import db
+from ..utils.helpers.basics import generate_random_string
 from ..utils.date_time import DateTimeUtils, to_gmt1_or_none
 from ..utils.helpers.loggers import console_log
 from .media import Media
@@ -44,6 +45,7 @@ class AppUser(db.Model, UserMixin):
     id = db.Column(db.Integer(), primary_key=True)
     email = db.Column(db.String(255), nullable=True, unique=True)
     username = db.Column(db.String(50), nullable=True, unique=True)
+    unique_code: str = db.Column(db.String(10), unique=True, nullable=False, index=True, default=lambda: generate_random_string(9))
     password_hash = db.Column(db.String(255), nullable=True)
     date_joined = db.Column(db.DateTime(timezone=True), default=DateTimeUtils.aware_utcnow)
     
@@ -54,7 +56,7 @@ class AppUser(db.Model, UserMixin):
     wallet = db.relationship('Wallet', back_populates="app_user", uselist=False, cascade="all, delete-orphan")
     payments = db.relationship('Payment', back_populates='app_user', lazy='dynamic')
     subscriptions = db.relationship('Subscription', back_populates='app_user', lazy='dynamic')
-    qrcodes = db.relationship('QRCode', back_populates='app_user', lazy='dynamic')
+    qr_codes = db.relationship('QRCode', back_populates='owner', lazy='dynamic')
     
     roles = db.relationship('UserRole', back_populates='user', foreign_keys='UserRole.app_user_id', cascade="all, delete-orphan") # roles assigned to the user.
     assigned_roles = db.relationship('UserRole', back_populates='assigner', foreign_keys='UserRole.assigner_id', cascade="all, delete-orphan") # roles that the user has assigned to others
@@ -62,6 +64,13 @@ class AppUser(db.Model, UserMixin):
 
     def __str__(self) -> str:
         return self.profile.firstname.capitalize()
+    
+    @property
+    def short_code(self) -> str:
+        return self.unique_code
+    
+    def regenerate_unique_code(self):
+        self.unique_code = generate_random_string(9)
     
     @property
     def password(self) -> AttributeError:

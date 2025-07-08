@@ -19,12 +19,12 @@ from .wallet import Wallet
 
 from .payment import Payment, Transaction
 from .subscription import Subscription, SubscriptionPlan
-from .defaults import create_default_admin, create_roles
-from .qrcode import QRCode
-from .template import Template
+from .defaults import create_default_admin, create_roles, create_default_templates
+from .qrcode import QRCode, Template
 
 
 def create_db_defaults(app: Flask) -> None:
     with app.app_context():
         create_roles()
         create_default_admin()
+        create_default_templates()

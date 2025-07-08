@@ -218,69 +218,35 @@
 			"get": {
 				"tags": ["Base"],
 				"summary": "Fetch Available Templates",
-				"parameters": [],
+				"description": "Returns a list of available QR code templates. Each template includes a schema_definition field describing the required data fields.",
 				"responses": {
 					"200": {
-						"description": "Status of the update",
+						"description": "List of templates",
 						"schema": {
 							"type": "object",
 							"properties": {
-								"message": { "type": "string" },
-								"status": {
-									"type": "string",
-									"enum": ["success", "failed"],
-									"example": "success"
-								},
-								"status_code": {
-									"type": "integer",
-									"enum": [200, 400, 409],
-									"example": 200
-								}
-							}
-						}
-					}
-				}
-			}
-		},
-		"/api/qrcodes": {
-			"post": {
-				"tags": ["Base"],
-				"summary": "Endpoint Generate QR codes",
-				"parameters": [
-					{
-						"name": "body",
-						"in": "body",
-						"schema": {
-							"type": "object",
-							"properties": {
-								"type":    { "type": "string", "enum": ["menu","card","payment","custom"] },
-								"payload": { "type": "string" }
-							},
-							"required": ["type","payload"]
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "Status of the qr code generation",
-						"schema": {
-							"type": "object",
-							"properties": {
-								"message": { "type": "string" },
-								"status": {
-									"type": "string",
-									"enum": ["success", "failed"],
-									"example": "success"
-								},
-								"status_code": {
-									"type": "integer",
-									"enum": [200, 400, 409],
-									"example": 200
-								},
+								"message": { "type": "string", "example": "Templates fetched successfully" },
+								"status": { "type": "string", "enum": ["success", "failed"], "example": "success" },
+								"status_code": { "type": "integer", "example": 200 },
 								"data": {
 									"type": "object",
 									"properties": {
-										"qrcode": {"type": "object"}
+										"templates": {
+											"type": "array",
+											"items": { "$ref": "#/definitions/Template" },
+											"example": [
+												{
+													"id": "123e4567-e89b-12d3-a456-426614174000",
+													"name": "Restaurant Menu",
+													"description": "A template for restaurant menus with table numbers.",
+													"type": "menu",
+													"schema_definition": {"url": "string", "restaurant_name": "string", "table_number": "string"},
+													"preview_url": "https://…/menu_thumb.png",
+													"created_at": "2024-06-01T12:00:00Z",
+													"updated_at": "2024-06-01T12:00:00Z"
+												}
+											]
+										}
 									}
 								}
 							}
@@ -289,74 +255,197 @@
 				}
 			}
 		},
-		"/api/qrcodes/{qrcode_id}": {
+		"/api/qrcodes": {
 			"get": {
+				"security": [ { "BaseBearerAuth": [] } ],
 				"tags": ["Base"],
-				"summary": "Endpoint To get specific qrcodes",
-				"parameters": [
-					{
-						"name": "qrcode_id",
-						"in": "path",
-						"description": "unique ID of a qrcode",
-						"required": true,
-						"type": "string"
-					}
-				],
+				"summary": "List all QR codes for the current user",
+				"description": "Returns all QR codes created by the authenticated user.",
 				"responses": {
 					"200": {
-						"description": "Status of the update",
+						"description": "List of QR codes",
 						"schema": {
 							"type": "object",
 							"properties": {
-								"message": { "type": "string" },
-								"status": {
-									"type": "string",
-									"enum": ["success", "failed"],
-									"example": "success"
-								},
-								"status_code": {
-									"type": "integer",
-									"enum": [200, 400, 409],
-									"example": 200
+								"message": { "type": "string", "example": "QR codes fetched" },
+								"status": { "type": "string", "enum": ["success", "failed"], "example": "success" },
+								"status_code": { "type": "integer", "example": 200 },
+								"data": {
+									"type": "object",
+									"properties": {
+										"qrcodes": {
+											"type": "array",
+											"items": { "$ref": "#/definitions/QRCode" },
+											"example": [
+												{
+													"id": "123e4567-e89b-12d3-a456-426614174000",
+													"type": "menu",
+													"data_payload": {"url": "https://example.com/menu", "restaurant_name": "My Diner", "table_number": "5"},
+													"qr_code_image_url": "https://res.cloudinary.com/demo/image/upload/v1234567890/qr_codes/123e4567.png",
+													"created_at": "2024-06-01T12:00:00Z",
+													"updated_at": "2024-06-01T12:00:00Z"
+												}
+											]
+										}
+									}
 								}
 							}
 						}
 					}
 				}
 			},
-			"delete": {
+			"post": {
+				"security": [ { "BaseBearerAuth": [] } ],
 				"tags": ["Base"],
-				"summary": "Endpoint Delete Specific QR codes",
+				"summary": "Create a new QR code",
+				"description": "Creates a new QR code for the authenticated user. The data field must match the schema_definition of the selected template.",
 				"parameters": [
 					{
-						"name": "qrcode_id",
-						"in": "path",
-						"description": "unique ID of a qrcode",
-						"required": true,
-						"type": "string"
+						"name": "body",
+						"in": "body",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"template_id": { "type": "string", "example": "123e4567-e89b-12d3-a456-426614174000", "description": "ID of the template to use." },
+								"type": { "type": "string", "enum": ["menu", "card", "payment", "custom"], "example": "menu", "description": "Type of QR code (should match template type)." },
+								"data": {
+									"type": "object",
+									"example": {"url": "https://example.com/menu", "restaurant_name": "My Diner", "table_number": "5"},
+									"description": "Data to encode in the QR code, must match the template's schema_definition."
+								}
+							},
+							"required": ["template_id", "type", "data"]
+						},
+						"examples": {
+							"application/json": {
+								"template_id": "123e4567-e89b-12d3-a456-426614174000",
+								"type": "menu",
+								"data": {"url": "https://example.com/menu", "restaurant_name": "My Diner", "table_number": "5"}
+							}
+						}
 					}
 				],
 				"responses": {
+					"201": {
+						"description": "QR code created",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"message": { "type": "string", "example": "QR code created" },
+								"status": { "type": "string", "enum": ["success", "failed"], "example": "success" },
+								"status_code": { "type": "integer", "example": 201 },
+								"data": {
+									"type": "object",
+									"properties": {
+										"qr_code_id": { "type": "string", "example": "123e4567-e89b-12d3-a456-426614174000" },
+										"qr_code_image_url": { "type": "string", "example": "https://res.cloudinary.com/demo/image/upload/v1234567890/qr_codes/123e4567.png" },
+										"public_scan_url": { "type": "string", "example": "https://scancodes.net/abc123/menu/123e4567-e89b-12d3-a456-426614174000" }
+									}
+								}
+							}
+						}
+					},
+					"400": { "description": "Validation error" },
+					"401": { "description": "Unauthorized" },
+					"404": { "description": "Template not found" }
+				}
+			}
+		},
+		"/api/qrcodes/{id}": {
+			"get": {
+				"security": [ { "BaseBearerAuth": [] } ],
+				"tags": ["Base"],
+				"summary": "Get a specific QR code by ID",
+				"parameters": [
+					{ "name": "id", "in": "path", "required": true, "type": "string", "description": "QR code UUID" }
+				],
+				"responses": {
 					"200": {
-						"description": "Status of the delete operation",
+						"description": "QR code details",
 						"schema": {
 							"type": "object",
 							"properties": {
 								"message": { "type": "string" },
-								"status": {
-									"type": "string",
-									"enum": ["success", "failed"],
-									"example": "success"
-								},
-								"status_code": {
-									"type": "integer",
-									"enum": [200, 400, 409],
-									"example": 200
+								"status": { "type": "string", "enum": ["success", "failed"], "example": "success" },
+								"status_code": { "type": "integer", "example": 200 },
+								"data": { "type": "object", "properties": { "qrcode": { "type": "object" } } }
+							}
+						}
+					},
+					"404": { "description": "Not found" }
+				}
+			},
+			"delete": {
+				"security": [ { "BaseBearerAuth": [] } ],
+				"tags": ["Base"],
+				"summary": "Delete a specific QR code by ID",
+				"parameters": [
+					{ "name": "id", "in": "path", "required": true, "type": "string", "description": "QR code UUID" }
+				],
+				"responses": {
+					"200": { "description": "QR code deleted" },
+					"404": { "description": "Not found" }
+				}
+			}
+		},
+		"/api/scan/{short_code}/{template_type}/{uuid}": {
+			"get": {
+				"tags": ["Base"],
+				"summary": "Scan a QR code and fetch its data (public endpoint)",
+				"description": "Fetches the data associated with a QR code using the public scan URL. No authentication required.",
+				"parameters": [
+					{ "name": "short_code", "in": "path", "required": true, "type": "string", "description": "User's short code (from QR code URL)" },
+					{ "name": "template_type", "in": "path", "required": true, "type": "string", "description": "Template type (e.g., menu, card)" },
+					{ "name": "uuid", "in": "path", "required": true, "type": "string", "description": "QR code UUID" }
+				],
+				"responses": {
+					"200": {
+						"description": "QR code data",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"example": {
+										"id": "123e4567-e89b-12d3-a456-426614174000",
+										"type": "menu",
+										"data_payload": {"url": "https://example.com/menu", "restaurant_name": "My Diner", "table_number": "5"},
+										"qr_code_image_url": "https://res.cloudinary.com/demo/image/upload/v1234567890/qr_codes/123e4567.png",
+										"created_at": "2024-06-01T12:00:00Z",
+										"updated_at": "2024-06-01T12:00:00Z"
+									}
 								}
 							}
 						}
-					}
+					},
+					"404": { "description": "Not found or invalid" }
 				}
+			}
+		}
+	},
+	"definitions": {
+		"QRCode": {
+			"type": "object",
+			"properties": {
+				"id": { "type": "string", "example": "123e4567-e89b-12d3-a456-426614174000" },
+				"type": { "type": "string", "example": "menu" },
+				"data_payload": { "type": "object", "example": {"url": "https://example.com/menu", "restaurant_name": "My Diner", "table_number": "5"} },
+				"qr_code_image_url": { "type": "string", "example": "https://res.cloudinary.com/demo/image/upload/v1234567890/qr_codes/123e4567.png" },
+				"created_at": { "type": "string", "example": "2024-06-01T12:00:00Z" },
+				"updated_at": { "type": "string", "example": "2024-06-01T12:00:00Z" }
+			}
+		},
+		"Template": {
+			"type": "object",
+			"properties": {
+				"id": { "type": "string", "example": "123e4567-e89b-12d3-a456-426614174000" },
+				"name": { "type": "string", "example": "Restaurant Menu" },
+				"description": { "type": "string", "example": "A template for restaurant menus with table numbers." },
+				"type": { "type": "string", "example": "menu" },
+				"schema_definition": { "type": "object", "example": {"url": "string", "restaurant_name": "string", "table_number": "string"} },
+				"preview_url": { "type": "string", "example": "https://…/menu_thumb.png" },
+				"created_at": { "type": "string", "example": "2024-06-01T12:00:00Z" },
+				"updated_at": { "type": "string", "example": "2024-06-01T12:00:00Z" }
 			}
 		}
 	}

@@ -6,13 +6,14 @@ from ..extensions import db
 from .user import AppUser, Profile, Address
 from .wallet import Wallet
 from .role import Role, UserRole
-from .template import Template
+from .qrcode import Template
 from ..utils.helpers.loggers import console_log
 
 from ..enums.auth import RoleNames
 from ..enums.qrcode import QRCodeType
 
 def create_default_admin(clear: bool = False) -> None:
+    
     if inspect(db.engine).has_table("role"):
         admin_role = Role.query.filter_by(name=RoleNames.ADMIN).first()
         admin_role = Role.query.filter_by(name=RoleNames.ADMIN).first()
@@ -31,22 +32,6 @@ def create_default_admin(clear: bool = False) -> None:
                 slug=slugify(RoleNames.ADMIN.value)
             )
             db.session.add(admin_role)
-            db.session.commit()
-    
-    if inspect(db.engine).has_table("template"):
-        if Template.query.count() == 0:
-            templates = [
-                Template(name="Restaurant Menu",
-                        type=str(QRCodeType.MENU),
-                        payload_schema={"fields": ["url", "restaurant_name", "table_number"]},
-                        preview_url="https://…/menu_thumb.png"),
-                Template(name="Business Card",
-                        type=str(QRCodeType.CARD),
-                        payload_schema={"fields": ["name", "title", "company", "phone", "email"]},
-                        preview_url="https://…/card_thumb.png"),
-                # …more
-            ]
-            db.session.add_all(templates)
             db.session.commit()
     
     if inspect(db.engine).has_table("app_user"):
@@ -103,4 +88,39 @@ def create_roles(clear: bool = False) -> None:
                 new_role = Role(name=role_name, slug=slugify(role_name.value))
                 db.session.add(new_role)
         db.session.commit()
+
+
+def create_default_templates(clear: bool = False) -> None:
+    """
+    Seed the database with default QR code templates if none exist.
+    Args:
+        clear (bool): If True, clear all existing templates before seeding.
+    """
+    from .qrcode import Template
+    from ..enums.qrcode import QRCodeType
+    from sqlalchemy import inspect
+    if inspect(db.engine).has_table("template"):
+        if clear:
+            Template.query.delete()
+            db.session.commit()
+        if Template.query.count() == 0:
+            templates = [
+                Template(
+                    name="Restaurant Menu",
+                    type=str(QRCodeType.MENU),
+                    schema_definition={"url": "string", "restaurant_name": "string", "table_number": "string"},
+                    preview_url="https://…/menu_thumb.png",
+                    description="A template for restaurant menus with table numbers."
+                ),
+                Template(
+                    name="Business Card",
+                    type=str(QRCodeType.CARD),
+                    schema_definition={"name": "string", "title": "string", "company": "string", "phone": "string", "email": "string"},
+                    preview_url="https://…/card_thumb.png",
+                    description="A template for digital business cards."
+                ),
+                # Add more templates as needed
+            ]
+            db.session.add_all(templates)
+            db.session.commit()
 

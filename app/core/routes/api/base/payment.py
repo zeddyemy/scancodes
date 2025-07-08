@@ -1,7 +1,7 @@
-from .. import api_bp
+from .. import payment_bp
 from ....controllers.api import BaseController
 
-@api_bp.route("/payments", methods=["GET", "POST", "PUT", "DELETE"])
+@payment_bp.route("/", methods=["GET", "POST", "PUT", "DELETE"])
 def manage_payments():
     """
     Returns basic site information from settings.

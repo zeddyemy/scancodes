@@ -5,6 +5,7 @@ class RoleNames(Enum):
     """ENUMS for the name filed in Role Model"""
     ADMIN = "Admin"
     MANAGER = "Manager"
+    CREATOR = "Creator"
     CUSTOMER = "Customer"
     
     @classmethod

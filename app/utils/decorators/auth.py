@@ -45,6 +45,8 @@ def roles_required(*required_roles: str) -> Callable[[F], F]:
     
     normalized_required_roles = {normalize_role(role) for role in required_roles}
     
+    console_log("normalized_required_roles", normalized_required_roles)
+    
     def decorator(fn):
         @wraps(fn)
         @jwt_required()

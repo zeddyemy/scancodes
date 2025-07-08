@@ -1,13 +1,11 @@
 from flask import Blueprint, request
 
 from ....controllers.api.template import TemplateController
-from .. import api_bp
-
-template_bp = Blueprint('template', __name__, url_prefix='/templates')
-api_bp.register_blueprint(template_bp)
+from .. import template_bp
 
 @template_bp.route("/", methods=["GET", "POST"])
 def manage_templates():
+    """Handle GET (list templates) and POST (create template, not implemented) requests."""
     if request.method == "GET":
         return TemplateController.get_templates()
     elif request.method == "POST":
