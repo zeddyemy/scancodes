@@ -375,6 +375,58 @@
 					"404": { "description": "Not found" }
 				}
 			},
+			"put": {
+				"security": [ { "BaseBearerAuth": [] } ],
+				"tags": ["Base"],
+				"summary": "Update a specific QR code by ID",
+				"description": "Update the data and/or type of a QR code. The data field must match the template's schema_definition.",
+				"parameters": [
+					{ "name": "id", "in": "path", "required": true, "type": "string", "description": "QR code UUID" },
+					{
+						"name": "body",
+						"in": "body",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"data": {
+									"type": "object",
+									"example": {"url": "https://example.com/menu", "restaurant_name": "My Diner", "table_number": "5"},
+									"description": "Updated data for the QR code. Must match the template's schema_definition."
+								},
+								"type": {
+									"type": "string",
+									"enum": ["menu", "card", "payment", "custom"],
+									"example": "menu",
+									"description": "(Optional) New type for the QR code."
+								}
+							}
+						},
+						"examples": {
+							"application/json": {
+								"data": {"url": "https://example.com/menu", "restaurant_name": "My Diner", "table_number": "5"},
+								"type": "menu"
+							}
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "QR code updated",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"message": { "type": "string", "example": "QR code updated" },
+								"status": { "type": "string", "enum": ["success", "failed"], "example": "success" },
+								"status_code": { "type": "integer", "example": 200 },
+								"data": { "type": "object", "properties": { "qrcode": { "$ref": "#/definitions/QRCode" } } }
+							}
+						}
+					},
+					"400": { "description": "Validation error" },
+					"401": { "description": "Unauthorized" },
+					"404": { "description": "Not found or template not found" }
+				}
+			},
 			"delete": {
 				"security": [ { "BaseBearerAuth": [] } ],
 				"tags": ["Base"],

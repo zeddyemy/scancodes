@@ -21,6 +21,11 @@ from .loggers import console_log, log_exception
 from .basics import generate_random_string
 from config import Config
 
+cloudinary.config( 
+    cloud_name = Config.CLOUDINARY_CLOUD_NAME, 
+    api_key = Config.CLOUDINARY_API_KEY, 
+    api_secret = Config.CLOUDINARY_API_SECRET 
+)
 
 # Constants for file type validation
 IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp', '.svg'}

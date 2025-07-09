@@ -1,7 +1,7 @@
 import os, logging
 
 class Config:
-    ENV = os.environ.get("ENV") or "development"
+    ENV = os.getenv("ENV") or "development"
     SECRET_KEY = os.getenv("SECRET_KEY") or os.environ.get("SECRET_KEY")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
@@ -18,20 +18,23 @@ class Config:
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY") or os.environ.get('JWT_SECRET_KEY')
     
     # mail configurations
-    MAIL_SERVER = os.environ.get("MAIL_SERVER") or 'smtp.gmail.com'
-    MAIL_PORT = os.environ.get("MAIL_PORT") or 587
+    MAIL_SERVER = os.getenv("MAIL_SERVER") or 'smtp.gmail.com'
+    MAIL_PORT = os.getenv("MAIL_PORT") or 587
     MAIL_USE_SSL = False
     MAIL_USE_TLS = True
-    MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
-    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
-    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER')
+    MAIL_USERNAME = os.getenv("MAIL_USERNAME")
+    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
+    MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')
     MAIL_ALIAS = (f"{MAIL_DEFAULT_SENDER}", f"{MAIL_USERNAME}")
     
     # Domains
-    API_DOMAIN_NAME = os.environ.get("API_DOMAIN_NAME") or "https://estate-backend-erre.onrender.com"
-    APP_DOMAIN_NAME = os.environ.get("APP_DOMAIN_NAME") or "https://mellow-malasada-712092.netlify.app"
-    APP_MANAGER_DOMAIN_NAME = os.environ.get("APP_MANAGER_DOMAIN_NAME") or "https://mellow-malasada-712092.netlify.app"
-    APP_RECEPTION_DOMAIN_NAME = os.environ.get("APP_RECEPTION_DOMAIN_NAME") or "https://mellow-malasada-712092.netlify.app"
+    APP_DOMAIN_NAME = os.getenv("APP_DOMAIN_NAME") or "https://www.scancodes.net"
+    API_DOMAIN_NAME = os.getenv("API_DOMAIN_NAME") or "https://scancodes.onrender.com"
+    
+    # Cloudinary configurations
+    CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
+    CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")
+    CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
 
 
 class DevelopmentConfig(Config):

@@ -4,7 +4,7 @@ from .. import scan_bp
 from ....controllers.api import QrCodeController
 from .....utils.decorators.auth import roles_required
 
-@scan_bp.route("/<string:short_code>/<string:template_type>/<uuid:uuid>", methods=["GET", "POST"])
+@scan_bp.route("/<string:short_code>/<string:template_type>/<string:uuid>", methods=["GET"])
 def scan(short_code, template_type, uuid):
     """Scan endpoint: fetch QR code by uuid, validate short_code and template_type, and return data."""
     from .....models.qrcode import QRCode, Template

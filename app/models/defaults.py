@@ -40,8 +40,6 @@ def create_default_admin(clear: bool = False) -> None:
                 .join(Role, UserRole.role_id == Role.id) \
                 .filter(Role.name == RoleNames.ADMIN).first()
         
-        console_log("admin", admin)
-        
         if clear and admin:
             # Clear existing roles before creating new ones
             admin.delete()

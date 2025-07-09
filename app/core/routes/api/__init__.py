@@ -12,4 +12,4 @@ qrcode_bp = Blueprint('qrcode', __name__, url_prefix='/qrcodes')
 scan_bp = Blueprint('scan', __name__, url_prefix='/scan')
 payment_bp = Blueprint('payment', __name__, url_prefix='/payments')
 
-from .base import index, auth, qrcode, template, payment
+from .base import index, auth, qrcode, template, scan, payment

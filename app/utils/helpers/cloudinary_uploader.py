@@ -10,9 +10,9 @@ def init_cloudinary():
     This function should be called before any Cloudinary upload/delete operations.
     """
     cloudinary.config(
-        cloud_name=current_app.config.get('CLOUD_NAME'),
-        api_key=current_app.config.get('API_KEY'),
-        api_secret=current_app.config.get('API_SECRET')
+        cloud_name=current_app.config.get('CLOUDINARY_CLOUD_NAME'),
+        api_key=current_app.config.get('CLOUDINARY_API_KEY'),
+        api_secret=current_app.config.get('CLOUDINARY_API_SECRET')
     )
 
 def upload_qr_code_to_cloudinary(file_stream: BinaryIO, public_id: str) -> str:
@@ -30,7 +30,7 @@ def upload_qr_code_to_cloudinary(file_stream: BinaryIO, public_id: str) -> str:
     try:
         response = cloudinary.uploader.upload(
             file_stream,
-            public_id=f"qr_codes/{public_id}", # Stores image in 'qr_codes' folder with the given public_id
+            public_id=f"{public_id}", # Stores image with the given public_id
             folder="qr_codes", # Explicitly set folder
             resource_type="image" # Specify resource type as image
         )

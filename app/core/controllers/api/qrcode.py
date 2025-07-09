@@ -1,9 +1,10 @@
 from uuid import uuid4
 from flask import request, current_app
-from flask_jwt_extended import jwt_required, get_jwt_identity
+
 from ....extensions import db
 from ....models.qrcode import QRCode, Template
-from ....utils.helpers.loggers import console_log
+from ....utils.helpers.basics import generate_random_string
+from ....utils.helpers.loggers import console_log, log_exception
 from ....utils.helpers.validate import validate_json_data
 from ....utils.helpers.user import get_current_user
 from ....utils.helpers.http_response import success_response, error_response
@@ -24,7 +25,7 @@ class QrCodeController:
         payload = data.get("data")
         if not data or not template_id or not payload:
             return error_response("Missing template_id or data", 400)
-        template = Template.query.get(template_id)
+        template: Template = Template.query.get(template_id)
         if not template:
             console_log("MSG", f"Template with ID {template_id} not found.", "WARNING")
             return error_response("Template not found", 404)
@@ -39,13 +40,13 @@ class QrCodeController:
         try:
             new_qr_code_uuid = str(uuid4())
             public_scan_url = (
-                f"{current_app.config['FRONTEND_BASE_URL']}/"
+                f"{current_app.config['APP_DOMAIN_NAME']}/"
                 f"{current_user.short_code}/"
-                f"{template.name}/"
+                f"{template.type}/"
                 f"{new_qr_code_uuid}"
             )
             qr_image_stream, mime_type = generate_qr_code_image(public_scan_url)
-            qr_code_image_url = upload_qr_code_to_cloudinary(qr_image_stream, new_qr_code_uuid)
+            qr_code_image_url = upload_qr_code_to_cloudinary(qr_image_stream, generate_random_string(11))
             new_qr = QRCode(
                 id=new_qr_code_uuid,
                 user_id=current_user.id,
@@ -68,7 +69,8 @@ class QrCodeController:
             )
         except Exception as e:
             db.session.rollback()
-            current_app.logger.error(f"Error creating QR code for user {current_user.id}: {e}")
+            log_exception(f"Error creating QR code for user {current_user.id}", e)
+            
             if 'qr_code_image_url' in locals() and qr_code_image_url:
                 delete_qr_code_from_cloudinary(new_qr_code_uuid)
                 current_app.logger.warning(f"Cleaned up Cloudinary for failed QR code {new_qr_code_uuid}.")
@@ -77,7 +79,11 @@ class QrCodeController:
     @staticmethod
     def list():
         """List all QR codes for the current user."""
-        user_id = get_jwt_identity()
+        current_user = get_current_user()
+        if not current_user:
+            return error_response("Unauthorized", 401)
+        
+        user_id = current_user.id
         items = QRCode.query.filter_by(user_id=user_id).all()
         return success_response(
             "QR codes fetched",
@@ -88,8 +94,13 @@ class QrCodeController:
     @staticmethod
     def get(id: int):
         """Get a specific QR code by ID for the current user."""
-        user_id = get_jwt_identity()
-        qr = QRCode.query.filter_by(id=id, user_id=user_id).first()
+        
+        current_user = get_current_user()
+        if not current_user:
+            return error_response("Unauthorized", 401)
+        
+        user_id = current_user.id
+        qr: QRCode = QRCode.query.filter_by(id=id, user_id=user_id).first()
         if not qr:
             return error_response("Not found", 404)
         return success_response("QR code fetched", 200, {"qrcode": qr.to_dict()})
@@ -97,10 +108,43 @@ class QrCodeController:
     @staticmethod
     def delete(id: int):
         """Delete a specific QR code by ID for the current user."""
-        user_id = get_jwt_identity()
-        qr = QRCode.query.filter_by(id=id, user_id=user_id).first()
+        current_user = get_current_user()
+        if not current_user:
+            return error_response("Unauthorized", 401)
+        
+        user_id = current_user.id
+        qr: QRCode = QRCode.query.filter_by(id=id, user_id=user_id).first()
         if not qr:
             return error_response("Not found", 404)
         db.session.delete(qr)
         db.session.commit()
         return success_response("QR code deleted", 200, None)
+
+    @staticmethod
+    def update(id: int):
+        """Update a specific QR code's data and type for the current user."""
+        current_user = get_current_user()
+        if not current_user:
+            return error_response("Unauthorized", 401)
+        qr: QRCode = QRCode.query.filter_by(id=id, user_id=current_user.id).first()
+        if not qr:
+            return error_response("Not found", 404)
+        data = request.get_json() or {}
+        payload = data.get("data")
+        temp_type = data.get("type")
+        # Optionally allow updating type
+        if payload:
+            template = Template.query.get(qr.template_id)
+            if not template:
+                return error_response("Template not found", 404)
+            if not validate_json_data(payload, template.schema_definition):
+                return error_response("Data payload does not match template schema", 400)
+            qr.data_payload = payload
+        if temp_type:
+            try:
+                typ_enum = QRCodeType(temp_type)
+                qr.type = temp_type
+            except ValueError:
+                return error_response("Invalid QR code type", 400)
+        db.session.commit()
+        return success_response("QR code updated", 200, {"qrcode": qr.to_dict()})

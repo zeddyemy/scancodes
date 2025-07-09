@@ -12,9 +12,10 @@ def qrcode():
     elif request.method == "POST":
         return QrCodeController.create()
 
-@qrcode_bp.route("/<uuid:id>", methods=["GET", "PUT", "DELETE"])
+@qrcode_bp.route("/<string:id>", methods=["GET", "PUT", "DELETE"])
 @roles_required("Admin", "Customer")
 def manage_qrcode(id):
+    """Get, update, or delete a specific QR code by ID."""
     if request.method == "GET":
         return QrCodeController.get(id)
     elif request.method == "PUT":
