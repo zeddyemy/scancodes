@@ -117,7 +117,20 @@ def create_default_templates(clear: bool = False) -> None:
                     preview_url="https://…/card_thumb.png",
                     description="A template for digital business cards."
                 ),
-                # Add more templates as needed
+                Template(
+                    name="Club DJ",
+                    type="club_dj",
+                    schema_definition={"club_id": "integer", "dj_id": "integer"},
+                    preview_url="https://…/club_dj_thumb.png",
+                    description="A template for DJs working under a club."
+                ),
+                Template(
+                    name="Personal DJ",
+                    type="personal_dj",
+                    schema_definition={"dj_id": "integer"},
+                    preview_url="https://…/personal_dj_thumb.png",
+                    description="A template for personal DJs."
+                ),
             ]
             db.session.add_all(templates)
             db.session.commit()

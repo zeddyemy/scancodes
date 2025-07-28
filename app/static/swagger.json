@@ -473,6 +473,100 @@
 					"404": { "description": "Not found or invalid" }
 				}
 			}
+		},
+		"/api/requests": {
+			"post": {
+				"security": [ { "BaseBearerAuth": [] } ],
+				"tags": ["Base"],
+				"summary": "Create a music request or shoutout for a DJ/Club QR code",
+				"description": "Submit a music request or shoutout for a DJ or club QR code. Requires authentication.",
+				"parameters": [
+					{
+						"name": "body",
+						"in": "body",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"qr_code_id": { "type": "string", "example": "123e4567-e89b-12d3-a456-426614174000", "description": "ID of the QR code being scanned." },
+								"type": { "type": "string", "enum": ["music_request", "shoutout"], "example": "music_request", "description": "Type of request: music_request or shoutout." },
+								"song_title": { "type": "string", "example": "Shape of You", "description": "Title of the requested song (for music requests)." },
+								"message": { "type": "string", "example": "Happy Birthday DJ!", "description": "Message for the DJ (for shoutouts or requests)." },
+								"tip_amount": { "type": "number", "example": 500, "description": "Tip amount for the DJ (optional)." }
+							},
+							"required": ["qr_code_id", "type"]
+						},
+						"examples": {
+							"application/json": {
+								"qr_code_id": "123e4567-e89b-12d3-a456-426614174000",
+								"type": "music_request",
+								"song_title": "Shape of You",
+								"message": "Please play this next!",
+								"tip_amount": 500
+							}
+						}
+					}
+				],
+				"responses": {
+					"201": {
+						"description": "Request submitted",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"message": { "type": "string", "example": "Request submitted" },
+								"status": { "type": "string", "enum": ["success", "failed"], "example": "success" },
+								"status_code": { "type": "integer", "example": 201 },
+								"data": { "type": "object", "properties": { "request": { "type": "object" } } }
+							}
+						}
+					},
+					"400": { "description": "Validation error" },
+					"401": { "description": "Unauthorized" },
+					"404": { "description": "QR code not found" }
+				}
+			}
+		},
+		"/api/notifications": {
+			"get": {
+				"security": [ { "BaseBearerAuth": [] } ],
+				"tags": ["Base"],
+				"summary": "List notifications for the current DJ (by user)",
+				"description": "Fetch all notifications for the currently authenticated DJ user.",
+				"responses": {
+					"200": {
+						"description": "Notifications fetched",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"message": { "type": "string", "example": "Notifications fetched" },
+								"status": { "type": "string", "enum": ["success", "failed"], "example": "success" },
+								"status_code": { "type": "integer", "example": 200 },
+								"data": {
+									"type": "object",
+									"properties": {
+										"notifications": {
+											"type": "array",
+											"items": { "type": "object" },
+											"example": [
+												{
+													"id": 1,
+													"dj_id": 2,
+													"music_request_id": 5,
+													"type": "music_request",
+													"message": "Please play Shape of You",
+													"is_read": false,
+													"created_at": "2024-06-01T12:00:00Z"
+												}
+											]
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": { "description": "Unauthorized" },
+					"404": { "description": "No DJ profile found for user" }
+				}
+			}
 		}
 	},
 	"definitions": {
