@@ -12,7 +12,7 @@ from .utils.helpers.loggers import console_log
 from .extensions import db
 
 
-def create_app(config_name=Config.ENV, create_defaults=True):
+def create_app(config_name=Config.ENV, create_defaults=Config.CREATE_DEFAULTS):
     '''
     Creates and configures the Flask application instance.
 

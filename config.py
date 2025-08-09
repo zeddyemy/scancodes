@@ -1,6 +1,7 @@
 import os, logging
 
 class Config:
+    CREATE_DEFAULTS = True
     ENV = os.getenv("ENV") or "development"
     SECRET_KEY = os.getenv("SECRET_KEY") or os.environ.get("SECRET_KEY")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
